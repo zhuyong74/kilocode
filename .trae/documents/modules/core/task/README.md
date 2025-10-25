@@ -12,9 +12,15 @@ Task 模块是 Kilocode 的核心任务管理系统，负责处理 AI 助手任�
 - **状态持久化**: 任务状态的保存和恢复
 - **错误处理和重试**: 智能错误处理和自动重试机制
 
-## 2. 核心类设计
+## 2. 文档结构
 
-### 2.1 Task 类
+- `task.md` - 模块技术文档，包含详细的功能说明和 API 文档
+- `task-main.md` - 主要功能和使用说明
+- `task-architecture.md` - 模块架构设计文档
+
+## 3. 核心类设计
+
+### 3.1 Task 类
 
 ```typescript
 export class Task extends EventEmitter<TaskEvents> implements TaskLike {
