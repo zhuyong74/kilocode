@@ -5,7 +5,9 @@
 ### 脚本名称和用途
 
 - **脚本名称**: `openai-test-server.ts`
+
 - **主要用途**: 提供 OpenAI API 的本地测试服务器，用于开发和测试 Kilocode 扩展
+
 - **脚本类型**: TypeScript Node.js 服务器应用
 
 ### 主要功能描述
@@ -13,18 +15,27 @@
 该脚本实现了一个完整的 OpenAI API 模拟服务器，包括：
 
 - 模拟 OpenAI Chat Completions API (支持流式和非流式)
+
 - 提供模型列表 API
+
 - 实现速率限制和错误模拟
+
 - 支持 CORS 跨域请求
+
 - 提供健康检查和状态监控端点
 
 ### 适用场景和目标用户
 
 - **目标用户**: Kilocode 扩展开发者和测试人员
+
 - **适用场景**:
+
     - 本地开发环境测试
+
     - CI/CD 集成测试
+
     - API 调用逻辑验证
+
     - 错误处理测试
 
 ## 2. 技术架构
@@ -57,9 +68,13 @@ graph TD
 ### 核心技术栈和依赖
 
 - **运行时**: Node.js 16+
+
 - **语言**: TypeScript 4.5+
+
 - **Web 框架**: Express.js 4.x
+
 - **跨域支持**: CORS middleware
+
 - **流式响应**: Server-Sent Events (SSE)
 
 ### 输入输出数据流
@@ -93,12 +108,17 @@ sequenceDiagram
 - **支持参数**:
 
     - `model`: 模型名称 (如 "gpt-3.5-turbo", "gpt-4")
+
     - `messages`: 消息数组
+
     - `stream`: 是否启用流式响应
+
     - `max_tokens`: 最大令牌数
+
     - `temperature`: 温度参数
 
 - **响应格式**:
+
     ```typescript
     interface ChatCompletionResponse {
     	id: string
@@ -124,16 +144,19 @@ sequenceDiagram
 #### 2. 模型列表 API (`/v1/models`)
 
 - 返回可用模型列表
+
 - 模拟 OpenAI 的模型响应格式
 
 #### 3. 健康检查 (`/health`)
 
 - 服务器状态检查
+
 - 返回简单的健康状态
 
 #### 4. 服务器状态 (`/status`)
 
 - 详细的服务器运行状态
+
 - 包含启动时间、请求计数等信息
 
 ### 速率限制功能
@@ -458,6 +481,7 @@ app.use(
     ```
 
 2. **使用调试工具**
+
     ```bash
     # 使用 Node.js 调试器
     node --inspect scripts/kilocode/server/openai-test-server.js
@@ -488,7 +512,9 @@ app.use(
 ### 支持的环境
 
 - **Node.js**: 16.x, 18.x, 20.x
+
 - **TypeScript**: 4.5+
+
 - **操作系统**: Windows, macOS, Linux
 
 ### 依赖版本要求
@@ -514,15 +540,19 @@ app.use(
 ### API 规范
 
 - [OpenAI API Reference](https://platform.openai.com/docs/api-reference)
+
 - [Server-Sent Events Specification](https://html.spec.whatwg.org/multipage/server-sent-events.html)
 
 ### 技术文档
 
 - [Express.js Documentation](https://expressjs.com/)
+
 - [TypeScript Handbook](https://www.typescriptlang.org/docs/)
+
 - [Node.js Documentation](https://nodejs.org/docs/)
 
 ### 相关项目文件
 
 - `../README.md` - 服务器脚本目录概览
+
 - `../../README.md` - 脚本目录总览
