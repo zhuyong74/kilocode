@@ -366,6 +366,7 @@ export class FileWatcher implements IFileWatcher {
     ```
 
 3. **缓存一致性检查**：
+
     ```typescript
     private async _shouldProcessFile(filePath: string): Promise<boolean> {
         const currentHash = await this._calculateFileHash(filePath)
