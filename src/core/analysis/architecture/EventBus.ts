@@ -127,6 +127,22 @@ export class EventBus implements IEventBus {
 	}
 
 	/**
+	 * Emit an event (alias for publish for EventEmitter compatibility)
+	 */
+	emit<T = any>(eventName: string, data?: T): boolean {
+		this.publish(eventName, data)
+		return true
+	}
+
+	/**
+	 * Add event listener (alias for subscribe for EventEmitter compatibility)
+	 */
+	on<T = any>(eventName: string, handler: EventHandler<T>): this {
+		this.subscribe(eventName, handler)
+		return this
+	}
+
+	/**
 	 * Publish an event asynchronously
 	 */
 	async publishAsync<T = any>(eventName: string, data: T, metadata?: Partial<EventMetadata>): Promise<void> {
