@@ -1,948 +1,993 @@
 /**
- * Database Analysis Type Definitions
+ * 数据库模块类型定义
  *
- * This module defines the core types for database analysis,
- * including database connections, drivers, and analysis results.
+ * 定义了数据库分析相关的所有类型、接口和枚举。
+ *
+ * @version 1.0.0
+ * @author Kilocode Team
  */
 
-import { EventEmitter } from "events"
+import { BaseModel } from "./models"
 
 /**
- * Supported database types
+ * 数据库模式接口
+ */
+export interface DatabaseSchema extends BaseModel {
+	/** 数据库类型 */
+	databaseType: DatabaseType
+	/** 数据库版本 */
+	databaseVersion: string
+	/** 连接字符串 */
+	connectionString?: string
+	/** 表结构列表 */
+	tables: TableStructure[]
+	/** 关系映射 */
+	relationships: RelationshipMap[]
+	/** 索引列表 */
+	indexes: DatabaseIndex[]
+	/** 约束列表 */
+	constraints: DatabaseConstraint[]
+	/** 视图列表 */
+	views: DatabaseView[]
+	/** 存储过程列表 */
+	storedProcedures: StoredProcedure[]
+	/** 触发器列表 */
+	triggers: DatabaseTrigger[]
+	/** 模式元数据 */
+	schemaMetadata: SchemaMetadata
+}
+
+/**
+ * 数据库类型枚举
  */
 export enum DatabaseType {
-	/** MySQL database */
 	MYSQL = "mysql",
-	/** PostgreSQL database */
 	POSTGRESQL = "postgresql",
-	/** SQLite database */
 	SQLITE = "sqlite",
-	/** Microsoft SQL Server */
-	MSSQL = "mssql",
-	/** Oracle database */
-	ORACLE = "oracle",
-	/** MongoDB database */
 	MONGODB = "mongodb",
-	/** Redis database */
 	REDIS = "redis",
-	/** Cassandra database */
-	CASSANDRA = "cassandra",
-	/** InfluxDB database */
-	INFLUXDB = "influxdb",
-	/** Elasticsearch */
+	ORACLE = "oracle",
+	SQLSERVER = "sqlserver",
+	MARIADB = "mariadb",
+	COUCHDB = "couchdb",
+	NEO4J = "neo4j",
 	ELASTICSEARCH = "elasticsearch",
+	CASSANDRA = "cassandra",
+	DYNAMODB = "dynamodb",
+	FIREBASE = "firebase",
+	SUPABASE = "supabase",
 }
 
 /**
- * Database connection status
+ * 表结构接口
  */
-export enum ConnectionStatus {
-	/** Connection is disconnected */
-	DISCONNECTED = "disconnected",
-	/** Connection is connecting */
-	CONNECTING = "connecting",
-	/** Connection is connected */
-	CONNECTED = "connected",
-	/** Connection is reconnecting */
-	RECONNECTING = "reconnecting",
-	/** Connection failed */
-	FAILED = "failed",
-	/** Connection is closing */
-	CLOSING = "closing",
-	/** Connection is closed */
-	CLOSED = "closed",
-}
-
-/**
- * Database configuration
- */
-export interface DatabaseConfig {
-	/** Database type */
-	type: DatabaseType
-
-	/** Database host */
-	host: string
-
-	/** Database port */
-	port: number
-
-	/** Database name */
-	database: string
-
-	/** Username */
-	username: string
-
-	/** Password */
-	password: string
-
-	/** Connection timeout in milliseconds */
-	connectionTimeout: number
-
-	/** Query timeout in milliseconds */
-	queryTimeout: number
-
-	/** Enable SSL */
-	ssl: boolean
-
-	/** SSL configuration */
-	sslConfig?: SSLConfig
-
-	/** Connection pool configuration */
-	pool?: PoolConfig
-
-	/** Custom connection options */
-	options?: Record<string, any>
-}
-
-/**
- * SSL configuration
- */
-export interface SSLConfig {
-	/** Require SSL */
-	require: boolean
-
-	/** Reject unauthorized certificates */
-	rejectUnauthorized: boolean
-
-	/** CA certificate */
-	ca?: string
-
-	/** Client certificate */
-	cert?: string
-
-	/** Client private key */
-	key?: string
-
-	/** Passphrase for private key */
-	passphrase?: string
-}
-
-/**
- * Connection pool configuration
- */
-export interface PoolConfig {
-	/** Minimum pool size */
-	min: number
-
-	/** Maximum pool size */
-	max: number
-
-	/** Connection idle timeout in milliseconds */
-	idleTimeout: number
-
-	/** Connection acquire timeout in milliseconds */
-	acquireTimeout: number
-
-	/** Connection create timeout in milliseconds */
-	createTimeout: number
-
-	/** Connection destroy timeout in milliseconds */
-	destroyTimeout: number
-
-	/** Enable connection validation */
-	validate: boolean
-
-	/** Validation query */
-	validationQuery?: string
-}
-
-/**
- * Database connection interface
- */
-export interface IDatabaseConnection extends EventEmitter {
-	/** Connection ID */
-	readonly id: string
-
-	/** Database configuration */
-	readonly config: DatabaseConfig
-
-	/** Connection status */
-	readonly status: ConnectionStatus
-
-	/** Connection metadata */
-	readonly metadata: ConnectionMetadata
-
-	/** Connect to database */
-	connect(): Promise<void>
-
-	/** Disconnect from database */
-	disconnect(): Promise<void>
-
-	/** Test connection */
-	ping(): Promise<boolean>
-
-	/** Execute query */
-	query<T = any>(sql: string, params?: any[]): Promise<QueryResult<T>>
-
-	/** Execute multiple queries in transaction */
-	transaction<T = any>(queries: TransactionQuery[]): Promise<T[]>
-
-	/** Begin transaction */
-	beginTransaction(): Promise<void>
-
-	/** Commit transaction */
-	commit(): Promise<void>
-
-	/** Rollback transaction */
-	rollback(): Promise<void>
-
-	/** Get database schema */
-	getSchema(): Promise<DatabaseSchema>
-
-	/** Get table information */
-	getTableInfo(tableName: string): Promise<TableInfo>
-
-	/** Get column information */
-	getColumnInfo(tableName: string): Promise<ColumnInfo[]>
-
-	/** Get index information */
-	getIndexInfo(tableName: string): Promise<IndexInfo[]>
-
-	/** Get foreign key information */
-	getForeignKeyInfo(tableName: string): Promise<ForeignKeyInfo[]>
-
-	/** Get database statistics */
-	getStatistics(): Promise<DatabaseStatistics>
-
-	/** Dispose connection */
-	dispose(): Promise<void>
-}
-
-/**
- * Connection metadata
- */
-export interface ConnectionMetadata {
-	/** Database server version */
-	serverVersion: string
-
-	/** Database client version */
-	clientVersion: string
-
-	/** Connection creation time */
-	createdAt: Date
-
-	/** Last activity time */
-	lastActivityAt: Date
-
-	/** Connection uptime in milliseconds */
-	uptime: number
-
-	/** Total queries executed */
-	totalQueries: number
-
-	/** Connection properties */
-	properties: Record<string, any>
-}
-
-/**
- * Query result
- */
-export interface QueryResult<T = any> {
-	/** Query result rows */
-	rows: T[]
-
-	/** Number of affected rows */
-	rowCount: number
-
-	/** Query execution time in milliseconds */
-	executionTime: number
-
-	/** Query metadata */
-	metadata: QueryMetadata
-
-	/** Query warnings */
-	warnings: QueryWarning[]
-}
-
-/**
- * Query metadata
- */
-export interface QueryMetadata {
-	/** Query ID */
-	id: string
-
-	/** Query SQL */
-	sql: string
-
-	/** Query parameters */
-	parameters?: any[]
-
-	/** Query type */
-	type: "SELECT" | "INSERT" | "UPDATE" | "DELETE" | "CREATE" | "DROP" | "ALTER" | "OTHER"
-
-	/** Query plan */
-	plan?: QueryPlan
-
-	/** Query statistics */
-	statistics: QueryStatistics
-}
-
-/**
- * Query plan
- */
-export interface QueryPlan {
-	/** Plan nodes */
-	nodes: QueryPlanNode[]
-
-	/** Total cost */
-	totalCost: number
-
-	/** Execution time */
-	executionTime: number
-
-	/** Plan text */
-	text: string
-}
-
-/**
- * Query plan node
- */
-export interface QueryPlanNode {
-	/** Node type */
-	type: string
-
-	/** Node operation */
-	operation: string
-
-	/** Node cost */
-	cost: number
-
-	/** Node rows */
-	rows: number
-
-	/** Node width */
-	width: number
-
-	/** Child nodes */
-	children: QueryPlanNode[]
-
-	/** Node details */
-	details: Record<string, any>
-}
-
-/**
- * Query statistics
- */
-export interface QueryStatistics {
-	/** Rows examined */
-	rowsExamined: number
-
-	/** Rows sent */
-	rowsSent: number
-
-	/** Bytes sent */
-	bytesSent: number
-
-	/** Temporary tables created */
-	tempTablesCreated: number
-
-	/** Temporary disk tables created */
-	tempDiskTablesCreated: number
-
-	/** Sort merge passes */
-	sortMergePasses: number
-
-	/** Sort rows */
-	sortRows: number
-
-	/** Sort scan count */
-	sortScanCount: number
-}
-
-/**
- * Query warning
- */
-export interface QueryWarning {
-	/** Warning code */
-	code: string
-
-	/** Warning message */
-	message: string
-
-	/** Warning level */
-	level: "NOTE" | "WARNING" | "ERROR"
-}
-
-/**
- * Transaction query
- */
-export interface TransactionQuery {
-	/** Query SQL */
-	sql: string
-
-	/** Query parameters */
-	params?: any[]
-
-	/** Query name */
-	name?: string
-}
-
-/**
- * Database schema
- */
-export interface DatabaseSchema {
-	/** Database name */
-	name: string
-
-	/** Database version */
-	version: string
-
-	/** Database character set */
-	charset: string
-
-	/** Database collation */
-	collation: string
-
-	/** Database tables */
-	tables: TableInfo[]
-
-	/** Database views */
-	views: ViewInfo[]
-
-	/** Database procedures */
-	procedures: ProcedureInfo[]
-
-	/** Database functions */
-	functions: FunctionInfo[]
-
-	/** Database triggers */
-	triggers: TriggerInfo[]
-
-	/** Database indexes */
-	indexes: IndexInfo[]
-
-	/** Database constraints */
-	constraints: ConstraintInfo[]
-}
-
-/**
- * Table information
- */
-export interface TableInfo {
-	/** Table name */
-	name: string
-
-	/** Table schema */
-	schema: string
-
-	/** Table type */
-	type: "TABLE" | "VIEW" | "TEMPORARY"
-
-	/** Table engine */
-	engine?: string
-
-	/** Table character set */
+export interface TableStructure extends BaseModel {
+	/** 表名 */
+	tableName: string
+	/** 表架构 */
+	schema?: string
+	/** 字段列表 */
+	columns: ColumnDefinition[]
+	/** 主键 */
+	primaryKey: PrimaryKey
+	/** 外键列表 */
+	foreignKeys: ForeignKey[]
+	/** 索引列表 */
+	indexes: TableIndex[]
+	/** 约束列表 */
+	constraints: TableConstraint[]
+	/** 表类型 */
+	tableType: TableType
+	/** 存储引擎 */
+	storageEngine?: string
+	/** 字符集 */
 	charset?: string
-
-	/** Table collation */
+	/** 排序规则 */
 	collation?: string
-
-	/** Table comment */
-	comment?: string
-
-	/** Table creation time */
+	/** 行数估计 */
+	rowCount?: number
+	/** 表大小（字节） */
+	tableSize?: number
+	/** 创建时间 */
 	createdAt?: Date
-
-	/** Table modification time */
-	modifiedAt?: Date
-
-	/** Table row count */
-	rowCount: number
-
-	/** Table size in bytes */
-	size: number
-
-	/** Table columns */
-	columns: ColumnInfo[]
-
-	/** Table indexes */
-	indexes: IndexInfo[]
-
-	/** Table foreign keys */
-	foreignKeys: ForeignKeyInfo[]
-
-	/** Table constraints */
-	constraints: ConstraintInfo[]
+	/** 最后修改时间 */
+	lastModified?: Date
+	/** 表注释 */
+	comment?: string
+	/** 表元数据 */
+	tableMetadata?: Record<string, any>
 }
 
 /**
- * Column information
+ * 字段定义接口
  */
-export interface ColumnInfo {
-	/** Column name */
+export interface ColumnDefinition {
+	/** 字段名 */
 	name: string
-
-	/** Column data type */
-	dataType: string
-
-	/** Column length */
-	length?: number
-
-	/** Column precision */
-	precision?: number
-
-	/** Column scale */
-	scale?: number
-
-	/** Column is nullable */
+	/** 数据类型 */
+	dataType: DataType
+	/** 是否可空 */
 	nullable: boolean
-
-	/** Column default value */
+	/** 默认值 */
 	defaultValue?: any
-
-	/** Column is primary key */
-	isPrimaryKey: boolean
-
-	/** Column is unique */
-	isUnique: boolean
-
-	/** Column is auto increment */
-	isAutoIncrement: boolean
-
-	/** Column comment */
-	comment?: string
-
-	/** Column character set */
-	charset?: string
-
-	/** Column collation */
-	collation?: string
-}
-
-/**
- * Index information
- */
-export interface IndexInfo {
-	/** Index name */
-	name: string
-
-	/** Index table */
-	table: string
-
-	/** Index type */
-	type: "PRIMARY" | "UNIQUE" | "INDEX" | "FULLTEXT" | "SPATIAL"
-
-	/** Index columns */
-	columns: IndexColumnInfo[]
-
-	/** Index is unique */
-	isUnique: boolean
-
-	/** Index cardinality */
-	cardinality: number
-
-	/** Index size in bytes */
-	size: number
-
-	/** Index comment */
-	comment?: string
-}
-
-/**
- * Index column information
- */
-export interface IndexColumnInfo {
-	/** Column name */
-	name: string
-
-	/** Column order */
-	order: "ASC" | "DESC"
-
-	/** Column length */
+	/** 是否自增 */
+	autoIncrement?: boolean
+	/** 是否唯一 */
+	unique?: boolean
+	/** 是否主键 */
+	isPrimaryKey?: boolean
+	/** 是否外键 */
+	isForeignKey?: boolean
+	/** 字段长度 */
 	length?: number
-
-	/** Column position in index */
+	/** 字段精度 */
+	precision?: number
+	/** 字段标度 */
+	scale?: number
+	/** 字符集 */
+	charset?: string
+	/** 排序规则 */
+	collation?: string
+	/** 字段注释 */
+	comment?: string
+	/** 字段位置 */
 	position: number
+	/** 字段元数据 */
+	metadata?: Record<string, any>
 }
 
 /**
- * Foreign key information
+ * 数据类型枚举
  */
-export interface ForeignKeyInfo {
-	/** Foreign key name */
+export enum DataType {
+	// 数值类型
+	INTEGER = "integer",
+	BIGINT = "bigint",
+	SMALLINT = "smallint",
+	DECIMAL = "decimal",
+	NUMERIC = "numeric",
+	REAL = "real",
+	DOUBLE = "double",
+	FLOAT = "float",
+
+	// 字符串类型
+	VARCHAR = "varchar",
+	CHAR = "char",
+	TEXT = "text",
+	LONGTEXT = "longtext",
+	MEDIUMTEXT = "mediumtext",
+	TINYTEXT = "tinytext",
+
+	// 日期时间类型
+	DATE = "date",
+	TIME = "time",
+	DATETIME = "datetime",
+	TIMESTAMP = "timestamp",
+	YEAR = "year",
+
+	// 布尔类型
+	BOOLEAN = "boolean",
+
+	// 二进制类型
+	BLOB = "blob",
+	LONGBLOB = "longblob",
+	MEDIUMBLOB = "mediumblob",
+	TINYBLOB = "tinyblob",
+	BINARY = "binary",
+	VARBINARY = "varbinary",
+
+	// JSON类型
+	JSON = "json",
+	JSONB = "jsonb",
+
+	// UUID类型
+	UUID = "uuid",
+
+	// 数组类型
+	ARRAY = "array",
+
+	// 枚举类型
+	ENUM = "enum",
+
+	// 几何类型
+	GEOMETRY = "geometry",
+	GEOGRAPHY = "geography",
+
+	// 网络类型
+	INET = "inet",
+	CIDR = "cidr",
+	MACADDR = "macaddr",
+
+	// 范围类型
+	INT4RANGE = "int4range",
+	INT8RANGE = "int8range",
+	NUMRANGE = "numrange",
+	TSRANGE = "tsrange",
+	TSTZRANGE = "tstzrange",
+	DATERANGE = "daterange",
+
+	// 自定义类型
+	CUSTOM = "custom",
+}
+
+/**
+ * 表类型枚举
+ */
+export enum TableType {
+	TABLE = "table",
+	VIEW = "view",
+	MATERIALIZED_VIEW = "materialized_view",
+	TEMPORARY_TABLE = "temporary_table",
+	EXTERNAL_TABLE = "external_table",
+	SYSTEM_TABLE = "system_table",
+}
+
+/**
+ * 主键接口
+ */
+export interface PrimaryKey {
+	/** 主键名称 */
 	name: string
-
-	/** Source table */
-	table: string
-
-	/** Source columns */
+	/** 主键字段 */
 	columns: string[]
+	/** 是否自动递增 */
+	autoIncrement?: boolean
+	/** 主键约束名 */
+	constraintName?: string
+}
 
-	/** Referenced table */
+/**
+ * 外键接口
+ */
+export interface ForeignKey {
+	/** 外键名称 */
+	name: string
+	/** 外键字段 */
+	columns: string[]
+	/** 引用表 */
 	referencedTable: string
-
-	/** Referenced columns */
+	/** 引用字段 */
 	referencedColumns: string[]
-
-	/** On update action */
-	onUpdate: "CASCADE" | "SET NULL" | "RESTRICT" | "NO ACTION"
-
-	/** On delete action */
-	onDelete: "CASCADE" | "SET NULL" | "RESTRICT" | "NO ACTION"
+	/** 更新规则 */
+	onUpdate: ReferentialAction
+	/** 删除规则 */
+	onDelete: ReferentialAction
+	/** 外键约束名 */
+	constraintName?: string
 }
 
 /**
- * Constraint information
+ * 引用动作枚举
  */
-export interface ConstraintInfo {
-	/** Constraint name */
+export enum ReferentialAction {
+	CASCADE = "cascade",
+	SET_NULL = "set_null",
+	SET_DEFAULT = "set_default",
+	RESTRICT = "restrict",
+	NO_ACTION = "no_action",
+}
+
+/**
+ * 表索引接口
+ */
+export interface TableIndex {
+	/** 索引名称 */
 	name: string
-
-	/** Constraint type */
-	type: "PRIMARY KEY" | "FOREIGN KEY" | "UNIQUE" | "CHECK" | "NOT NULL"
-
-	/** Constraint table */
-	table: string
-
-	/** Constraint columns */
+	/** 索引字段 */
 	columns: string[]
+	/** 是否唯一 */
+	unique: boolean
+	/** 是否主键 */
+	isPrimary?: boolean
+	/** 索引类型 */
+	type: IndexType
+	/** 索引方法 */
+	method?: string
+	/** 索引注释 */
+	comment?: string
+}
 
-	/** Constraint definition */
+/**
+ * 索引类型枚举
+ */
+export enum IndexType {
+	BTREE = "btree",
+	HASH = "hash",
+	GIST = "gist",
+	SPGIST = "spgist",
+	GIN = "gin",
+	BRIN = "brin",
+	FULLTEXT = "fulltext",
+	SPATIAL = "spatial",
+}
+
+/**
+ * 表约束接口
+ */
+export interface TableConstraint {
+	/** 约束名称 */
+	name: string
+	/** 约束类型 */
+	type: ConstraintType
+	/** 约束字段 */
+	columns: string[]
+	/** 约束条件 */
+	condition?: string
+	/** 约束定义 */
 	definition?: string
 }
 
 /**
- * View information
+ * 约束类型枚举
  */
-export interface ViewInfo {
-	/** View name */
-	name: string
+export enum ConstraintType {
+	PRIMARY_KEY = "primary_key",
+	FOREIGN_KEY = "foreign_key",
+	UNIQUE = "unique",
+	CHECK = "check",
+	NOT_NULL = "not_null",
+	DEFAULT = "default",
+}
 
-	/** View schema */
-	schema: string
+/**
+ * 关系映射接口
+ */
+export interface RelationshipMap extends BaseModel {
+	/** 源表 */
+	sourceTable: string
+	/** 目标表 */
+	targetTable: string
+	/** 关系类型 */
+	relationshipType: RelationshipType
+	/** 源字段 */
+	sourceColumns: string[]
+	/** 目标字段 */
+	targetColumns: string[]
+	/** 基数 */
+	cardinality: Cardinality
+	/** 关系强度 */
+	relationshipStrength: RelationshipStrength
+	/** 是否双向 */
+	bidirectional: boolean
+	/** 级联操作 */
+	cascadeOperations: CascadeOperation[]
+	/** 关系注释 */
+	comment?: string
+	/** 关系元数据 */
+	metadata?: Record<string, any>
+}
 
-	/** View definition */
+/**
+ * 关系类型枚举
+ */
+export enum RelationshipType {
+	ONE_TO_ONE = "one_to_one",
+	ONE_TO_MANY = "one_to_many",
+	MANY_TO_ONE = "many_to_one",
+	MANY_TO_MANY = "many_to_many",
+	INHERITANCE = "inheritance",
+	COMPOSITION = "composition",
+	AGGREGATION = "aggregation",
+}
+
+/**
+ * 基数枚举
+ */
+export enum Cardinality {
+	ZERO_OR_ONE = "zero_or_one",
+	ONE = "one",
+	ZERO_OR_MANY = "zero_or_many",
+	ONE_OR_MANY = "one_or_many",
+	MANY = "many",
+}
+
+/**
+ * 关系强度枚举
+ */
+export enum RelationshipStrength {
+	WEAK = "weak",
+	STRONG = "strong",
+	ASSOCIATIVE = "associative",
+}
+
+/**
+ * 级联操作枚举
+ */
+export enum CascadeOperation {
+	CASCADE = "cascade",
+	SET_NULL = "set_null",
+	SET_DEFAULT = "set_default",
+	RESTRICT = "restrict",
+	NO_ACTION = "no_action",
+}
+
+/**
+ * 数据库索引接口
+ */
+export interface DatabaseIndex extends BaseModel {
+	/** 索引名称 */
+	indexName: string
+	/** 表名 */
+	tableName: string
+	/** 索引字段 */
+	columns: string[]
+	/** 是否唯一 */
+	unique: boolean
+	/** 索引类型 */
+	indexType: IndexType
+	/** 索引方法 */
+	method?: string
+	/** 索引注释 */
+	comment?: string
+	/** 索引大小（字节） */
+	size?: number
+	/** 索引选择性 */
+	selectivity?: number
+	/** 最后重建时间 */
+	lastRebuilt?: Date
+	/** 索引元数据 */
+	metadata?: Record<string, any>
+}
+
+/**
+ * 数据库约束接口
+ */
+export interface DatabaseConstraint extends BaseModel {
+	/** 约束名称 */
+	constraintName: string
+	/** 约束类型 */
+	constraintType: ConstraintType
+	/** 表名 */
+	tableName: string
+	/** 约束字段 */
+	columns: string[]
+	/** 约束定义 */
 	definition: string
+	/** 约束状态 */
+	status: ConstraintStatus
+	/** 约束注释 */
+	comment?: string
+	/** 约束元数据 */
+	metadata?: Record<string, any>
+}
 
-	/** View is updatable */
+/**
+ * 约束状态枚举
+ */
+export enum ConstraintStatus {
+	ENABLED = "enabled",
+	DISABLED = "disabled",
+	VALIDATED = "validated",
+	NOVALIDATE = "novalidate",
+}
+
+/**
+ * 数据库视图接口
+ */
+export interface DatabaseView extends BaseModel {
+	/** 视图名称 */
+	viewName: string
+	/** 视图定义 */
+	definition: string
+	/** 视图字段 */
+	columns: ColumnDefinition[]
+	/** 基础表 */
+	baseTables: string[]
+	/** 是否可更新 */
 	isUpdatable: boolean
-
-	/** View comment */
+	/** 检查选项 */
+	checkOption?: string
+	/** 视图注释 */
 	comment?: string
+	/** 创建时间 */
+	createdAt?: Date
+	/** 最后修改时间 */
+	lastModified?: Date
+	/** 视图元数据 */
+	metadata?: Record<string, any>
 }
 
 /**
- * Procedure information
+ * 存储过程接口
  */
-export interface ProcedureInfo {
-	/** Procedure name */
-	name: string
-
-	/** Procedure schema */
-	schema: string
-
-	/** Procedure definition */
+export interface StoredProcedure extends BaseModel {
+	/** 存储过程名称 */
+	procedureName: string
+	/** 参数列表 */
+	parameters: ProcedureParameter[]
+	/** 返回类型 */
+	returnType?: DataType
+	/** 存储过程定义 */
 	definition: string
-
-	/** Procedure parameters */
-	parameters: ParameterInfo[]
-
-	/** Procedure return type */
-	returnType?: string
-
-	/** Procedure comment */
+	/** 存储过程语言 */
+	language: string
+	/** 存储过程注释 */
 	comment?: string
+	/** 创建时间 */
+	createdAt?: Date
+	/** 最后修改时间 */
+	lastModified?: Date
+	/** 存储过程元数据 */
+	metadata?: Record<string, any>
 }
 
 /**
- * Function information
+ * 存储过程参数接口
  */
-export interface FunctionInfo {
-	/** Function name */
+export interface ProcedureParameter {
+	/** 参数名称 */
 	name: string
-
-	/** Function schema */
-	schema: string
-
-	/** Function definition */
-	definition: string
-
-	/** Function parameters */
-	parameters: ParameterInfo[]
-
-	/** Function return type */
-	returnType: string
-
-	/** Function comment */
-	comment?: string
-}
-
-/**
- * Parameter information
- */
-export interface ParameterInfo {
-	/** Parameter name */
-	name: string
-
-	/** Parameter data type */
-	dataType: string
-
-	/** Parameter mode */
-	mode: "IN" | "OUT" | "INOUT"
-
-	/** Parameter default value */
+	/** 参数类型 */
+	type: DataType
+	/** 参数模式 */
+	mode: ParameterMode
+	/** 默认值 */
 	defaultValue?: any
+	/** 参数注释 */
+	comment?: string
 }
 
 /**
- * Trigger information
+ * 参数模式枚举
  */
-export interface TriggerInfo {
-	/** Trigger name */
-	name: string
-
-	/** Trigger table */
-	table: string
-
-	/** Trigger event */
-	event: "INSERT" | "UPDATE" | "DELETE"
-
-	/** Trigger timing */
-	timing: "BEFORE" | "AFTER" | "INSTEAD OF"
-
-	/** Trigger definition */
-	definition: string
-
-	/** Trigger is active */
-	isActive: boolean
+export enum ParameterMode {
+	IN = "in",
+	OUT = "out",
+	INOUT = "inout",
 }
 
 /**
- * Database statistics
+ * 数据库触发器接口
+ */
+export interface DatabaseTrigger extends BaseModel {
+	/** 触发器名称 */
+	triggerName: string
+	/** 触发器事件 */
+	triggerEvent: TriggerEvent
+	/** 触发时机 */
+	triggerTiming: TriggerTiming
+	/** 触发器表 */
+	triggerTable: string
+	/** 触发器定义 */
+	definition: string
+	/** 触发器条件 */
+	condition?: string
+	/** 触发器注释 */
+	comment?: string
+	/** 创建时间 */
+	createdAt?: Date
+	/** 最后修改时间 */
+	lastModified?: Date
+	/** 触发器元数据 */
+	metadata?: Record<string, any>
+}
+
+/**
+ * 触发器事件枚举
+ */
+export enum TriggerEvent {
+	INSERT = "insert",
+	UPDATE = "update",
+	DELETE = "delete",
+	TRUNCATE = "truncate",
+}
+
+/**
+ * 触发时机枚举
+ */
+export enum TriggerTiming {
+	BEFORE = "before",
+	AFTER = "after",
+	INSTEAD_OF = "instead_of",
+}
+
+/**
+ * 模式元数据接口
+ */
+export interface SchemaMetadata {
+	/** 数据库大小（字节） */
+	databaseSize: number
+	/** 表数量 */
+	tableCount: number
+	/** 视图数量 */
+	viewCount: number
+	/** 索引数量 */
+	indexCount: number
+	/** 存储过程数量 */
+	procedureCount: number
+	/** 触发器数量 */
+	triggerCount: number
+	/** 约束数量 */
+	constraintCount: number
+	/** 关系数量 */
+	relationshipCount: number
+	/** 模式复杂度 */
+	complexity: SchemaComplexity
+	/** 性能指标 */
+	performanceMetrics: SchemaPerformanceMetrics
+	/** 创建时间 */
+	createdAt?: Date
+	/** 最后修改时间 */
+	lastModified?: Date
+}
+
+/**
+ * 模式复杂度接口
+ */
+export interface SchemaComplexity {
+	/** 复杂度得分 */
+	score: number
+	/** 复杂度级别 */
+	level: ComplexityLevel
+	/** 表复杂度 */
+	tableComplexity: number
+	/** 关系复杂度 */
+	relationshipComplexity: number
+	/** 索引复杂度 */
+	indexComplexity: number
+	/** 约束复杂度 */
+	constraintComplexity: number
+}
+
+/**
+ * 复杂度级别枚举
+ */
+export enum ComplexityLevel {
+	SIMPLE = "simple",
+	MODERATE = "moderate",
+	COMPLEX = "complex",
+	VERY_COMPLEX = "very_complex",
+}
+
+/**
+ * 模式性能指标接口
+ */
+export interface SchemaPerformanceMetrics {
+	/** 查询性能 */
+	queryPerformance: number
+	/** 索引效率 */
+	indexEfficiency: number
+	/** 存储效率 */
+	storageEfficiency: number
+	/** 维护成本 */
+	maintenanceCost: number
+	/** 可扩展性 */
+	scalability: number
+	/** 性能评分 */
+	performanceScore: number
+}
+
+/**
+ * 数据库分析结果接口
+ */
+export interface DatabaseAnalysisResult extends BaseModel {
+	/** 数据库模式 */
+	schema: DatabaseSchema
+	/** 分析状态 */
+	status: AnalysisStatus
+	/** 开始时间 */
+	startTime: Date
+	/** 结束时间 */
+	endTime?: Date
+	/** 持续时间（毫秒） */
+	duration?: number
+	/** 发现的表数量 */
+	discoveredTables: number
+	/** 分析的表数量 */
+	analyzedTables: number
+	/** 跳过的表数量 */
+	skippedTables: number
+	/** 错误表数量 */
+	errorTables: number
+	/** 警告表数量 */
+	warningTables: number
+	/** 分析结果 */
+	results: DatabaseResult[]
+	/** 错误信息 */
+	errors: DatabaseError[]
+	/** 警告信息 */
+	warnings: DatabaseWarning[]
+	/** 统计信息 */
+	statistics: DatabaseStatistics
+	/** 性能指标 */
+	performanceMetrics: DatabasePerformanceMetrics
+	/** 建议 */
+	recommendations: DatabaseRecommendation[]
+}
+
+/**
+ * 分析状态枚举
+ */
+export enum AnalysisStatus {
+	PENDING = "pending",
+	RUNNING = "running",
+	COMPLETED = "completed",
+	FAILED = "failed",
+	CANCELLED = "cancelled",
+	TIMEOUT = "timeout",
+}
+
+/**
+ * 数据库结果接口
+ */
+export interface DatabaseResult {
+	/** 结果ID */
+	id: string
+	/** 结果类型 */
+	type: DatabaseResultType
+	/** 表名 */
+	tableName: string
+	/** 严重程度 */
+	severity: SeverityLevel
+	/** 消息 */
+	message: string
+	/** 规则ID */
+	ruleId?: string
+	/** 规则名称 */
+	ruleName?: string
+	/** 建议 */
+	suggestions?: string[]
+	/** 上下文信息 */
+	context?: Record<string, any>
+	/** 元数据 */
+	metadata?: Record<string, any>
+}
+
+/**
+ * 数据库结果类型枚举
+ */
+export enum DatabaseResultType {
+	SCHEMA_ISSUE = "schema_issue",
+	PERFORMANCE_ISSUE = "performance_issue",
+	SECURITY_ISSUE = "security_issue",
+	DESIGN_ISSUE = "design_issue",
+	NORMALIZATION_ISSUE = "normalization_issue",
+	INDEX_ISSUE = "index_issue",
+	CONSTRAINT_ISSUE = "constraint_issue",
+	RELATIONSHIP_ISSUE = "relationship_issue",
+	BEST_PRACTICE = "best_practice",
+}
+
+/**
+ * 严重程度级别枚举
+ */
+export enum SeverityLevel {
+	INFO = "info",
+	LOW = "low",
+	MEDIUM = "medium",
+	HIGH = "high",
+	CRITICAL = "critical",
+}
+
+/**
+ * 数据库错误接口
+ */
+export interface DatabaseError {
+	/** 错误代码 */
+	code: string
+	/** 错误消息 */
+	message: string
+	/** 表名 */
+	tableName?: string
+	/** 字段名 */
+	columnName?: string
+	/** 约束名 */
+	constraintName?: string
+	/** 堆栈跟踪 */
+	stack?: string
+	/** 错误详情 */
+	details?: Record<string, any>
+}
+
+/**
+ * 数据库警告接口
+ */
+export interface DatabaseWarning {
+	/** 警告代码 */
+	code: string
+	/** 警告消息 */
+	message: string
+	/** 表名 */
+	tableName?: string
+	/** 字段名 */
+	columnName?: string
+	/** 约束名 */
+	constraintName?: string
+	/** 警告详情 */
+	details?: Record<string, any>
+}
+
+/**
+ * 数据库统计接口
  */
 export interface DatabaseStatistics {
-	/** Database size in bytes */
-	size: number
-
-	/** Number of tables */
-	tableCount: number
-
-	/** Number of views */
-	viewCount: number
-
-	/** Number of procedures */
-	procedureCount: number
-
-	/** Number of functions */
-	functionCount: number
-
-	/** Number of triggers */
-	triggerCount: number
-
-	/** Number of indexes */
-	indexCount: number
-
-	/** Total row count */
-	totalRows: number
-
-	/** Connection count */
-	connectionCount: number
-
-	/** Active connection count */
-	activeConnections: number
-
-	/** Query statistics */
-	queryStatistics: {
-		totalQueries: number
-		selectQueries: number
-		insertQueries: number
-		updateQueries: number
-		deleteQueries: number
-		averageQueryTime: number
-	}
-
-	/** Performance statistics */
-	performanceStatistics: {
-		cpuUsage: number
-		memoryUsage: number
-		diskUsage: number
-		networkIO: number
-	}
+	/** 总表数 */
+	totalTables: number
+	/** 总字段数 */
+	totalColumns: number
+	/** 总索引数 */
+	totalIndexes: number
+	/** 总约束数 */
+	totalConstraints: number
+	/** 总关系数 */
+	totalRelationships: number
+	/** 总存储过程数 */
+	totalProcedures: number
+	/** 总触发器数 */
+	totalTriggers: number
+	/** 总视图数 */
+	totalViews: number
+	/** 数据库大小（字节） */
+	totalSize: number
+	/** 平均表大小（字节） */
+	averageTableSize: number
+	/** 最大表大小（字节） */
+	maxTableSize: number
+	/** 最小表大小（字节） */
+	minTableSize: number
+	/** 平均字段数 */
+	averageColumnCount: number
+	/** 最大字段数 */
+	maxColumnCount: number
+	/** 最小字段数 */
+	minColumnCount: number
+	/** 索引覆盖率 */
+	indexCoverage: number
+	/** 约束覆盖率 */
+	constraintCoverage: number
+	/** 规范化级别 */
+	normalizationLevel: number
 }
 
 /**
- * Database driver interface
+ * 数据库性能指标接口
  */
-export interface IDatabaseDriver {
-	/** Driver name */
-	readonly name: string
-
-	/** Supported database type */
-	readonly type: DatabaseType
-
-	/** Driver version */
-	readonly version: string
-
-	/** Create connection */
-	createConnection(config: DatabaseConfig): Promise<IDatabaseConnection>
-
-	/** Test connection */
-	testConnection(config: DatabaseConfig): Promise<boolean>
-
-	/** Validate configuration */
-	validateConfig(config: DatabaseConfig): Promise<boolean>
-
-	/** Get default configuration */
-	getDefaultConfig(): Partial<DatabaseConfig>
-
-	/** Dispose driver */
-	dispose(): Promise<void>
+export interface DatabasePerformanceMetrics {
+	/** 查询性能评分 */
+	queryPerformanceScore: number
+	/** 索引效率评分 */
+	indexEfficiencyScore: number
+	/** 存储效率评分 */
+	storageEfficiencyScore: number
+	/** 维护成本评分 */
+	maintenanceCostScore: number
+	/** 可扩展性评分 */
+	scalabilityScore: number
+	/** 总体性能评分 */
+	overallPerformanceScore: number
+	/** 性能瓶颈 */
+	performanceBottlenecks: PerformanceBottleneck[]
+	/** 优化建议 */
+	optimizationSuggestions: string[]
 }
 
 /**
- * Database driver registry interface
+ * 性能瓶颈接口
  */
-export interface IDatabaseDriverRegistry {
-	/** Register driver */
-	register(driver: IDatabaseDriver): void
-
-	/** Unregister driver */
-	unregister(type: DatabaseType): void
-
-	/** Get driver */
-	get(type: DatabaseType): IDatabaseDriver | undefined
-
-	/** List all drivers */
-	list(): IDatabaseDriver[]
-
-	/** Check if driver is supported */
-	isSupported(type: DatabaseType): boolean
+export interface PerformanceBottleneck {
+	/** 瓶颈类型 */
+	type: BottleneckType
+	/** 瓶颈位置 */
+	location: string
+	/** 严重程度 */
+	severity: SeverityLevel
+	/** 影响描述 */
+	impact: string
+	/** 建议解决方案 */
+	suggestions: string[]
+	/** 预估改进 */
+	estimatedImprovement: number
 }
 
 /**
- * Connection pool interface
+ * 瓶颈类型枚举
  */
-export interface IConnectionPool extends EventEmitter {
-	/** Pool configuration */
-	readonly config: PoolConfig
-
-	/** Pool statistics */
-	readonly statistics: PoolStatistics
-
-	/** Initialize pool */
-	initialize(config: PoolConfig, factory: ConnectionFactory): Promise<void>
-
-	/** Acquire connection */
-	acquire(): Promise<IDatabaseConnection>
-
-	/** Release connection */
-	release(connection: IDatabaseConnection): Promise<void>
-
-	/** Destroy connection */
-	destroy(connection: IDatabaseConnection): Promise<void>
-
-	/** Clear pool */
-	clear(): Promise<void>
-
-	/** Dispose pool */
-	dispose(): Promise<void>
+export enum BottleneckType {
+	MISSING_INDEX = "missing_index",
+	REDUNDANT_INDEX = "redundant_index",
+	INEFFICIENT_QUERY = "inefficient_query",
+	TABLE_SCAN = "table_scan",
+	LOCK_CONTENTION = "lock_contention",
+	STORAGE_INEFFICIENCY = "storage_inefficiency",
+	NORMALIZATION_ISSUE = "normalization_issue",
+	DESIGN_PROBLEM = "design_problem",
 }
 
 /**
- * Connection factory
+ * 数据库建议接口
  */
-export type ConnectionFactory = () => Promise<IDatabaseConnection>
-
-/**
- * Pool statistics
- */
-export interface PoolStatistics {
-	/** Total connections */
-	total: number
-
-	/** Active connections */
-	active: number
-
-	/** Idle connections */
-	idle: number
-
-	/** Pending requests */
-	pending: number
-
-	/** Total acquisitions */
-	totalAcquisitions: number
-
-	/** Total releases */
-	totalReleases: number
-
-	/** Total destroys */
-	totalDestroys: number
-
-	/** Average acquisition time */
-	averageAcquisitionTime: number
-
-	/** Average connection lifetime */
-	averageConnectionLifetime: number
+export interface DatabaseRecommendation {
+	/** 建议ID */
+	id: string
+	/** 建议类型 */
+	type: RecommendationType
+	/** 建议标题 */
+	title: string
+	/** 建议描述 */
+	description: string
+	/** 优先级 */
+	priority: RecommendationPriority
+	/** 影响范围 */
+	impactScope: ImpactScope
+	/** 预估收益 */
+	estimatedBenefit: number
+	/** 实施难度 */
+	implementationDifficulty: ImplementationDifficulty
+	/** 具体建议 */
+	suggestions: string[]
+	/** 实施步骤 */
+	implementationSteps?: string[]
+	/** 风险评估 */
+	riskAssessment: RiskAssessment
+	/** 元数据 */
+	metadata?: Record<string, any>
 }
 
 /**
- * Database engine interface
+ * 建议类型枚举
  */
-export interface IDatabaseEngine {
-	/** Engine configuration */
-	readonly config: DatabaseConfig
-
-	/** Driver registry */
-	readonly drivers: IDatabaseDriverRegistry
-
-	/** Connection pool */
-	readonly pool: IConnectionPool
-
-	/** Initialize engine */
-	initialize(config: DatabaseConfig): Promise<void>
-
-	/** Create connection */
-	createConnection(): Promise<IDatabaseConnection>
-
-	/** Get connection from pool */
-	getConnection(): Promise<IDatabaseConnection>
-
-	/** Release connection to pool */
-	releaseConnection(connection: IDatabaseConnection): Promise<void>
-
-	/** Execute query */
-	query<T = any>(sql: string, params?: any[]): Promise<QueryResult<T>>
-
-	/** Execute transaction */
-	transaction<T = any>(queries: TransactionQuery[]): Promise<T[]>
-
-	/** Get database schema */
-	getSchema(): Promise<DatabaseSchema>
-
-	/** Get engine statistics */
-	getStatistics(): Promise<DatabaseEngineStatistics>
-
-	/** Dispose engine */
-	dispose(): Promise<void>
+export enum RecommendationType {
+	INDEX_OPTIMIZATION = "index_optimization",
+	SCHEMA_NORMALIZATION = "schema_normalization",
+	PERFORMANCE_IMPROVEMENT = "performance_improvement",
+	SECURITY_ENHANCEMENT = "security_enhancement",
+	STORAGE_OPTIMIZATION = "storage_optimization",
+	DESIGN_IMPROVEMENT = "design_improvement",
+	MAINTENANCE_OPTIMIZATION = "maintenance_optimization",
 }
 
 /**
- * Database engine statistics
+ * 建议优先级枚举
  */
-export interface DatabaseEngineStatistics {
-	/** Connection statistics */
-	connections: PoolStatistics
+export enum RecommendationPriority {
+	LOW = "low",
+	MEDIUM = "medium",
+	HIGH = "high",
+	CRITICAL = "critical",
+}
 
-	/** Query statistics */
-	queries: {
-		total: number
-		successful: number
-		failed: number
-		averageTime: number
-	}
+/**
+ * 影响范围枚举
+ */
+export enum ImpactScope {
+	SINGLE_TABLE = "single_table",
+	MULTIPLE_TABLES = "multiple_tables",
+	WHOLE_SCHEMA = "whole_schema",
+	PERFORMANCE = "performance",
+	SECURITY = "security",
+	STORAGE = "storage",
+}
 
-	/** Transaction statistics */
-	transactions: {
-		total: number
-		committed: number
-		rolledBack: number
-		averageTime: number
-	}
+/**
+ * 实施难度枚举
+ */
+export enum ImplementationDifficulty {
+	EASY = "easy",
+	MODERATE = "moderate",
+	DIFFICULT = "difficult",
+	COMPLEX = "complex",
+}
 
-	/** Performance statistics */
-	performance: {
-		memoryUsage: number
-		cpuUsage: number
-		networkIO: number
-	}
+/**
+ * 风险评估接口
+ */
+export interface RiskAssessment {
+	/** 风险级别 */
+	riskLevel: RiskLevel
+	/** 风险描述 */
+	riskDescription: string
+	/** 缓解措施 */
+	mitigationStrategies: string[]
+	/** 回滚计划 */
+	rollbackPlan?: string
+}
+
+/**
+ * 风险级别枚举
+ */
+export enum RiskLevel {
+	LOW = "low",
+	MEDIUM = "medium",
+	HIGH = "high",
+	CRITICAL = "critical",
 }
