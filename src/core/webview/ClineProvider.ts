@@ -66,6 +66,7 @@ import WorkspaceTracker from "../../integrations/workspace/WorkspaceTracker"
 
 import { McpHub } from "../../services/mcp/McpHub"
 import { McpServerManager } from "../../services/mcp/McpServerManager"
+import { TaskAutoFetcher } from "../../services/mcp/TaskAutoFetcher"
 import { MarketplaceManager } from "../../services/marketplace"
 import { ShadowCheckpointService } from "../../services/checkpoints/ShadowCheckpointService"
 import { CodeIndexManager } from "../../services/code-index/manager"
@@ -202,6 +203,12 @@ export class ClineProvider
 			.then((hub) => {
 				this.mcpHub = hub
 				this.mcpHub.registerClient()
+				try {
+					// Auto fetcher guarded by env flag KILOCODE_AUTO_FETCH_TASKS
+					new TaskAutoFetcher(this).start({ intervalMs: 15000 })
+				} catch (error) {
+					this.log(`[ClineProvider] Failed to start TaskAutoFetcher: ${error}`)
+				}
 			})
 			.catch((error) => {
 				this.log(`Failed to initialize MCP Hub: ${error}`)

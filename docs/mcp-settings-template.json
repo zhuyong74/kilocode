@@ -1,0 +1,12 @@
+{
+	"mcpServers": {
+		"task-broker": {
+			"type": "sse",
+			"url": "https://mcp.example.com/sse",
+			"headers": { "Authorization": "Bearer ${env:MCP_TOKEN}" },
+			"timeout": 60,
+			"alwaysAllow": ["tasks/next", "tasks/claim", "tasks/update", "tasks/complete"],
+			"disabledTools": []
+		}
+	}
+}
