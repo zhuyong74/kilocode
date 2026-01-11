@@ -106,9 +106,7 @@ export class TaskAutoFetcher {
 					)
 				}
 
-				const task = await this.provider.createTask(text, undefined, undefined, {
-					workspacePath: currentWorkspace,
-				})
+				const task = await this.provider.createTask(text)
 				await this.provider.postMessageToWebview({ type: "action", action: "chatButtonClicked" })
 
 				// mark in-progress on server
