@@ -72,7 +72,7 @@ graph TB
 ### 2.2 详细架构组件
 
 ```mermaid
-graph TB
+graph LR
     subgraph "Extension Layer"
         EXT[extension.ts<br/>扩展入口点]
     end
